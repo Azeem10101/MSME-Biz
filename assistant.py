@@ -8,51 +8,95 @@ from pydantic import ValidationError
 from typing import Dict, Any
 from schemas import (
     SaleEntry, ExpenseEntry, InventoryUpdate, 
-    SaleEntry, ExpenseEntry, InventoryUpdate, 
     SummaryQuery, InsightQuery, GeneralQuery, InventoryQuery, StockPurchase, UnknownIntent,
     AssistantResponse
 )
 
-SYSTEM_PROMPT = """Role: You are an AI business assistant for Indian micro, small, and medium enterprises (MSMEs). Your job is to parse informal, multilingual business messages and extract structured data. You must output only a single JSON object (no additional text, no lists, no code fences) that strictly follows one of the defined schemas. Do not invent or guess any missing values.
+SYSTEM_PROMPT = """You are BizAssist, a professional AI business assistant for Indian MSMEs (Micro, Small, and Medium Enterprises). You help business owners track sales, expenses, inventory, and provide insights.
 
-Multi-language Input: Accept user input in English, Hindi, Hinglish, or other Indian languages. CRITICAL: Preserve the original script (e.g. Devanagari) for product names, categories, and descriptions. Do not transliterate or romanize non-English text.
+## YOUR CAPABILITIES
+1. **Record Sales**: When user mentions selling products with prices
+2. **Record Expenses**: When user mentions spending money on business costs
+3. **Update Inventory**: When user mentions using/consuming items (no price mentioned)
+4. **Restock Inventory**: When user mentions buying stock for the business
+5. **Answer Queries**: About business performance, analytics, inventory levels
+6. **General Help**: Answer business-related questions
 
-Intent Classification: SALE_ENTRY, EXPENSE_ENTRY, INVENTORY_UPDATE, STOCK_PURCHASE, SUMMARY_QUERY, INSIGHT_QUERY, GENERAL_QUERY, INVENTORY_QUERY, or UNKNOWN.
+## INTENT CLASSIFICATION RULES
 
-Output Format: ONLY JSON. No extra words or markdown code fences.
+### SALE_ENTRY - Use when:
+- User mentions selling WITH price (e.g., "Sold 5 notebooks for 500", "Becha 10 packet doodh 600 mein")
+- Keywords: sold, sale, becha, bikri, earned, revenue + price
 
-Schemas:
-SALE_ENTRY: {{intent: "SALE_ENTRY", date: "YYYY-MM-DD", items: [{{product_name: str, quantity: num, unit_price: num}}], total: num, customer_name: optional str}}
-EXPENSE_ENTRY: {{intent: "EXPENSE_ENTRY", date: "YYYY-MM-DD", category: str, amount: num, description: optional str}}
-INVENTORY_UPDATE: {{intent: "INVENTORY_UPDATE", date: "YYYY-MM-DD", item: str, quantity_change: num}}
-STOCK_PURCHASE: {{intent: "STOCK_PURCHASE", date: "YYYY-MM-DD", item_name: str, quantity: num, total_cost: num}}
-INVENTORY_QUERY: {{intent: "INVENTORY_QUERY", item_name: optional str}}
-SUMMARY_QUERY: {{intent: "SUMMARY_QUERY", metric: str, start_date: "YYYY-MM-DD", end_date: "YYYY-MM-DD", answer: str, stats: dict}}
-INSIGHT_QUERY: {{intent: "INSIGHT_QUERY", insight_type: str, start_date: optional "YYYY-MM-DD", end_date: optional "YYYY-MM-DD", answer: str, stats: dict}}
-GENERAL_QUERY: {{intent: "GENERAL_QUERY", answer: str}}
-UNKNOWN: {{intent: "UNKNOWN", message: str}}
+### EXPENSE_ENTRY - Use when:
+- User mentions spending money on business (e.g., "Paid 2000 for electricity", "Bijli bill 1500")
+- Keywords: paid, spent, expense, kharcha, bill + amount
+
+### INVENTORY_UPDATE - Use when:
+- User mentions using/consuming items WITHOUT price (e.g., "Used 5 packets", "10 notebooks khatam")
+- This is for DEDUCTING stock (quantity should be NEGATIVE)
+- Keywords: used, consumed, khatam, finished, broken
+
+### STOCK_PURCHASE - Use when:
+- User mentions BUYING stock FOR the business (e.g., "Bought 50 milk for 2000", "Restocked notebooks")
+- This ADDS to inventory AND records as expense
+- Keywords: bought, purchased, restocked, refilled, liya
+
+### INVENTORY_QUERY - Use when:
+- User asks about current stock levels (e.g., "How much milk?", "Kitna stock hai?", "Check inventory")
+- Keywords: how much, stock, inventory, kitna, available
+
+### SUMMARY_QUERY - Use when:
+- User asks about business performance (e.g., "How am I doing?", "Show profits", "Aaj ki kamai")
+- Keywords: profit, revenue, performance, summary, analytics, numbers, kamai, munafa
+
+### INSIGHT_QUERY - Use when:
+- User asks for specific insights (e.g., "Best selling product?", "Top customer?")
+- Keywords: best, top, highest, trending, popular
+
+### GENERAL_QUERY - Use when:
+- User asks general business questions (e.g., "How to price products?", "What can you do?")
+- Provide helpful, professional advice
+
+### UNKNOWN - Use when:
+- Cannot understand the request or missing critical information
+- ALWAYS provide a helpful message suggesting what the user can try
+
+## FEW-SHOT EXAMPLES
+
+Input: "sold 5 notebooks for 500 to ramesh"
+Output: {{"intent": "SALE_ENTRY", "date": "{current_date}", "items": [{{"product_name": "notebooks", "quantity": 5, "unit_price": 100}}], "total": 500, "customer_name": "ramesh"}}
+
+Input: "bijli bill 1500 bhara"
+Output: {{"intent": "EXPENSE_ENTRY", "date": "{current_date}", "category": "Utilities", "amount": 1500, "description": "Electricity bill payment"}}
+
+Input: "used 3 packets milk"
+Output: {{"intent": "INVENTORY_UPDATE", "date": "{current_date}", "item": "milk", "quantity_change": -3}}
+
+Input: "bought 100 notebooks for 5000"
+Output: {{"intent": "STOCK_PURCHASE", "date": "{current_date}", "item_name": "notebooks", "quantity": 100, "total_cost": 5000}}
+
+Input: "kitna milk bacha hai"
+Output: {{"intent": "INVENTORY_QUERY", "item_name": "milk"}}
+
+Input: "aaj ki kamai dikhao"
+Output: {{"intent": "SUMMARY_QUERY", "metric": "daily_summary", "start_date": "{current_date}", "end_date": "{current_date}", "answer": "Fetching your daily summary...", "stats": {{}}}}
+
+Input: "sabse zyada kya bikta hai"
+Output: {{"intent": "INSIGHT_QUERY", "insight_type": "top_product", "answer": "Analyzing your best sellers...", "stats": {{}}}}
+
+Input: "what can you help me with"
+Output: {{"intent": "GENERAL_QUERY", "answer": "I can help you with:\\n\\n📊 **Track Sales**: Tell me what you sold and for how much\\n💰 **Record Expenses**: Log your business costs\\n📦 **Manage Inventory**: Update stock levels\\n📈 **Analytics**: View your business performance\\n\\nTry saying: \\"Sold 5 notebooks for 500\\" or \\"Show my analytics\\""}}
+
+## CRITICAL RULES
+1. **Output ONLY valid JSON** - No explanations, no markdown, just the JSON object
+2. **Use {current_date} for today's date** unless user specifies another date
+3. **Preserve original language** in product names and descriptions
+4. **Calculate totals correctly**: total = sum of (quantity × unit_price) for each item
+5. **For INVENTORY_UPDATE, quantity_change should be NEGATIVE** (items are being removed)
+6. **Always provide helpful answers** - Never leave users confused
 
 Current Date: {current_date}
-
-Instructions:
-1. Parse the input and map to one intent. 
-   - IMPORTANT: Use SUMMARY_QUERY for any questions about performance, money, revenue, profit, or "how am I doing?". 
-   - Even informal phrases like "show me the numbers" MUST use SUMMARY_QUERY.
-   - If user asks about STOCK LEVELS ("How much milk?", "Do I have notebooks?", "Inventory value"), use INVENTORY_QUERY.
-   - If user mentions "Sold" or "Used" but NO price/money, use INVENTORY_UPDATE (negative quantity).
-   - If user mentions "Bought", "Restocked", "Refilled" specific items ("Bought 50 milk packets for 2000"), use STOCK_PURCHASE.
-2. For SUMMARY_QUERY and INSIGHT_QUERY:
-   - Calculate the exact answer from Conversation History structured results (System Match).
-   - For SALE_ENTRY: Sum the "total" field.
-   - For EXPENSE_ENTRY: Sum the "amount" field.
-   - Populate the "answer" field with a professional summary (e.g., "Total revenue is ₹640..."). THIS WILL BE SHOWN TO THE USER.
-   - FOR INSIGHT_QUERY: If user asks about "best customer", "top item", set insight_type="top_product" or "top_customer". The backend contains the real data, so you can set "answer" to "Analyzing your data...".
-   - MANDATORY: Populate the "stats" field with raw numbers: {{"total_sales": num, "total_expenses": num, "net_profit": num, "transaction_count": num}}.
-   - net_profit = total_sales - total_expenses.
-   - transaction_count is the number of relevant entries (sales/expenses) found in current session.
-3. Ensure dates are ISO YYYY-MM-DD.
-4. numeric fields must be numbers.
-5. If missing critical info, return UNKNOWN with a message.
 """
 
 class MSMEAssistant:
@@ -67,60 +111,66 @@ class MSMEAssistant:
     def process_message(self, message: str, current_date: str, history: list = None) -> Dict[str, Any]:
         if not self.model:
             return {
-                "intent": "UNKNOWN",
-                "message": "API Key not configured."
+                "intent": "GENERAL_QUERY",
+                "answer": "⚠️ AI service not configured. Please check your API key."
             }
 
         try:
-            # Inject history into system prompt with structured data
+            # Build context from recent history
             history_context = ""
-            if history:
-                history_context = "\nConversation History (Simplified):\n"
-                for entry in history:
+            if history and len(history) > 0:
+                history_context = "\n## Recent Conversation:\n"
+                for entry in history[-6:]:  # Last 6 messages for context
                     role = "User" if entry.get("role") == "user" else "Assistant"
-                    content = entry.get("text", "")
-                    result = entry.get("result")
-                    
+                    content = entry.get("text", "")[:200]  # Truncate long messages
                     history_context += f"{role}: {content}\n"
-                    if result:
-                        history_context += f"System Match: {json.dumps(result)}\n"
             
             prompt = SYSTEM_PROMPT.format(current_date=current_date)
-            full_prompt = f"{prompt}\n{history_context}\nUser Message: {message}"
+            full_prompt = f"{prompt}\n{history_context}\n## Current User Message:\n{message}\n\n## Your JSON Response:"
             
             response = self.model.generate_content(
                 full_prompt,
                 generation_config=genai.types.GenerationConfig(
-                    temperature=0.1,
+                    temperature=0.05,  # Lower temperature for more consistent outputs
                 )
             )
             
             # Robust JSON extraction
             text = response.text.strip()
             
-            # Find the first { and last }
+            # Remove any markdown code fences
+            if text.startswith("```"):
+                lines = text.split("\n")
+                text = "\n".join(lines[1:-1] if lines[-1] == "```" else lines[1:])
+            
+            # Find JSON object
             start = text.find("{")
             end = text.rfind("}")
             
-            if start != -1 and end != -1:
+            if start != -1 and end != -1 and end > start:
                 json_str = text[start:end+1]
                 data = json.loads(json_str)
             else:
-                # If no braces found, maybe it's raw text?
+                # Fallback: try parsing the whole text
                 data = json.loads(text)
             
-            # Validate against schemas
+            # Validate and return
             validated_data = self._validate_data(data)
             return validated_data.model_dump()
 
+        except json.JSONDecodeError as e:
+            return {
+                "intent": "GENERAL_QUERY",
+                "answer": f"I understood your request but had trouble processing it. Could you try rephrasing? For example:\n\n• \"Sold 5 items for 500\"\n• \"Show my analytics\"\n• \"Check inventory\""
+            }
         except Exception as e:
             return {
-                "intent": "UNKNOWN",
-                "message": f"Error: {str(e)}"
+                "intent": "GENERAL_QUERY", 
+                "answer": f"I'm having trouble understanding. Try saying something like:\n\n📊 \"Show my analytics\"\n💰 \"Sold 10 notebooks for 1000\"\n📦 \"Check inventory\""
             }
 
     def _validate_data(self, data: Dict[str, Any]) -> AssistantResponse:
-        intent = data.get("intent")
+        intent = data.get("intent", "UNKNOWN")
         try:
             if intent == "SALE_ENTRY":
                 return SaleEntry(**data)
@@ -141,18 +191,25 @@ class MSMEAssistant:
             else:
                 return UnknownIntent(
                     intent="UNKNOWN",
-                    message=data.get("message", "Unknown or invalid intent.")
+                    message=data.get("message", "I didn't understand that. Try: 'Sold 5 items for 500' or 'Show analytics'")
                 )
         except ValidationError as e:
-            return UnknownIntent(
-                intent="UNKNOWN",
-                message=f"Validation failed: {str(e)}"
+            # Convert validation errors to helpful messages
+            return GeneralQuery(
+                intent="GENERAL_QUERY",
+                answer="I understood your intent but some details were unclear. Could you provide more specific information like quantities and prices?"
             )
 
 if __name__ == "__main__":
-    # Quick test
     assistant = MSMEAssistant()
-    sample_msg = "show me the numbers"
-    # Note: Use the current date from additional metadata in a real scenario
-    result = assistant.process_message(sample_msg, "2026-01-14")
-    print(json.dumps(result, indent=2))
+    test_cases = [
+        "sold 5 notebooks for 500",
+        "kitna milk hai",
+        "aaj ki kamai",
+        "what can you do",
+        "bijli bill 1500"
+    ]
+    for msg in test_cases:
+        print(f"\nInput: {msg}")
+        result = assistant.process_message(msg, "2026-01-22")
+        print(f"Output: {json.dumps(result, indent=2)}")
