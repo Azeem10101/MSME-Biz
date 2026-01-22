@@ -161,10 +161,24 @@ const ResultDisplay = ({ data }) => {
   }
 
   if (['SALE_ENTRY', 'EXPENSE_ENTRY', 'INVENTORY_UPDATE', 'STOCK_PURCHASE'].includes(data.intent)) {
+    const badgeClass = {
+      'SALE_ENTRY': 'sale',
+      'EXPENSE_ENTRY': 'expense',
+      'INVENTORY_UPDATE': 'inventory',
+      'STOCK_PURCHASE': 'stock'
+    }[data.intent];
+
+    const badgeIcon = {
+      'SALE_ENTRY': '💰',
+      'EXPENSE_ENTRY': '💸',
+      'INVENTORY_UPDATE': '📦',
+      'STOCK_PURCHASE': '🛒'
+    }[data.intent];
+
     return (
       <div className="result-card">
-        <div className="intent-badge">
-          {data.intent === 'SALE_ENTRY' && <TrendingUp size={12} />}
+        <div className={`intent-badge ${badgeClass}`}>
+          <span>{badgeIcon}</span>
           {data.intent.replace(/_/g, ' ')}
         </div>
         <div className="data-grid">
@@ -175,9 +189,9 @@ const ResultDisplay = ({ data }) => {
             </div>
           ))}
           {data.total && (
-            <div className="data-item" style={{ paddingTop: 8, borderTop: '1px solid var(--border)' }}>
-              <span className="label" style={{ fontWeight: 600 }}>Total</span>
-              <span className="value" style={{ color: 'var(--accent)' }}>
+            <div className="data-item" style={{ paddingTop: 12, marginTop: 8, borderTop: '2px solid var(--border)' }}>
+              <span className="label" style={{ fontWeight: 700, fontSize: '0.95rem' }}>Total</span>
+              <span className="value" style={{ fontSize: '1.2rem', color: 'var(--google-green)' }}>
                 ₹{data.total.toLocaleString('en-IN')}
               </span>
             </div>
@@ -185,9 +199,15 @@ const ResultDisplay = ({ data }) => {
           {data.amount && (
             <div className="data-item">
               <span className="label">{data.category || 'Amount'}</span>
-              <span className="value" style={{ color: '#f87171' }}>
+              <span className="value" style={{ color: 'var(--google-red)' }}>
                 ₹{data.amount.toLocaleString('en-IN')}
               </span>
+            </div>
+          )}
+          {data.customer_name && (
+            <div className="data-item">
+              <span className="label">Customer</span>
+              <span className="value" style={{ color: 'var(--google-blue)' }}>{data.customer_name}</span>
             </div>
           )}
         </div>
