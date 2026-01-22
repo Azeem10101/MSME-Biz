@@ -6,7 +6,8 @@ import {
 import { TrendingUp, PieChart as PieIcon, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const COLORS = ['#667eea', '#11998e', '#f5576c', '#f5af19', '#00f2fe'];
+// Google brand colors
+const COLORS = ['#4285F4', '#34A853', '#EA4335', '#FBBC05', '#8b5cf6'];
 
 const AnalyticsWidget = () => {
     const [weeklyData, setWeeklyData] = useState([]);
@@ -104,12 +105,12 @@ const AnalyticsWidget = () => {
                                 <AreaChart data={weeklyData}>
                                     <defs>
                                         <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#667eea" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#667eea" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#4285F4" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#4285F4" stopOpacity={0} />
                                         </linearGradient>
                                         <linearGradient id="expensesGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#f5576c" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="#f5576c" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#EA4335" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#EA4335" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
                                     <XAxis
@@ -133,7 +134,7 @@ const AnalyticsWidget = () => {
                                         type="monotone"
                                         dataKey="sales"
                                         name="Sales"
-                                        stroke="#667eea"
+                                        stroke="#4285F4"
                                         strokeWidth={2}
                                         fill="url(#salesGradient)"
                                     />
@@ -141,7 +142,7 @@ const AnalyticsWidget = () => {
                                         type="monotone"
                                         dataKey="expenses"
                                         name="Expenses"
-                                        stroke="#f5576c"
+                                        stroke="#EA4335"
                                         strokeWidth={2}
                                         fill="url(#expensesGradient)"
                                     />
@@ -176,8 +177,8 @@ const AnalyticsWidget = () => {
                                         data={topProducts}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={45}
-                                        outerRadius={75}
+                                        innerRadius={50}
+                                        outerRadius={85}
                                         paddingAngle={3}
                                         dataKey="revenue"
                                         nameKey="product"

@@ -82,21 +82,22 @@ async def process_message(request: MessageRequest):
         
         # Rich confirmation message
         customer = result.get('customer_name')
-        result['answer'] = f"✅ **Sale Recorded!**\n\n"
+        items_str = ", ".join([f"{i['quantity']}x {i['product_name']}" for i in result.get('items', [])])
+        result['answer'] = f"✅ Sale Recorded!\n\n"
         result['answer'] += f"📦 Items: {items_str}\n"
-        result['answer'] += f"💰 Total: **₹{int(result['total']):,}**\n"
+        result['answer'] += f"💰 Total: ₹{int(result['total']):,}\n"
         if customer:
             result['answer'] += f"👤 Customer: {customer}\n"
-        result['answer'] += f"\n_Stock updated automatically_"
+        result['answer'] += f"\nStock updated automatically"
         
     elif intent == 'EXPENSE_ENTRY':
         database.add_expense(result)
         print(f"DB: Saved Expense {result['amount']}")
         
         # Rich confirmation
-        result['answer'] = f"💸 **Expense Logged!**\n\n"
+        result['answer'] = f"💸 Expense Logged!\n\n"
         result['answer'] += f"📁 Category: {result.get('category', 'General')}\n"
-        result['answer'] += f"💰 Amount: **₹{int(result['amount']):,}**\n"
+        result['answer'] += f"💰 Amount: ₹{int(result['amount']):,}\n"
         if result.get('description'):
             result['answer'] += f"📝 Note: {result['description']}"
 
@@ -108,9 +109,9 @@ async def process_message(request: MessageRequest):
         
         new_stock = database.get_inventory_stock(item_name)
         action = "removed from" if qty_change < 0 else "added to"
-        result['answer'] = f"📦 **Inventory Updated!**\n\n"
-        result['answer'] += f"{abs(int(qty_change))} units {action} **{item_name}**\n"
-        result['answer'] += f"Current Stock: **{int(new_stock)} units**"
+        result['answer'] = f"📦 Inventory Updated!\n\n"
+        result['answer'] += f"{abs(int(qty_change))} units {action} {item_name}\n"
+        result['answer'] += f"Current Stock: {int(new_stock)} units"
     
     elif intent == 'STOCK_PURCHASE':
         # 1. Update Inventory (Add stock)
@@ -146,11 +147,11 @@ async def process_message(request: MessageRequest):
             c = db_stats['transaction_count']
             
             profit_emoji = "📈" if p >= 0 else "📉"
-            result['answer'] = f"📊 **Today's Business Summary**\n\n"
-            result['answer'] += f"💵 Revenue: **₹{int(s):,}**\n"
-            result['answer'] += f"💸 Expenses: **₹{int(e):,}**\n"
-            result['answer'] += f"{profit_emoji} Net Profit: **₹{int(p):,}**\n\n"
-            result['answer'] += f"_Based on {c} transactions_"
+            result['answer'] = f"📊 Today's Business Summary\n\n"
+            result['answer'] += f"💵 Revenue: ₹{int(s):,}\n"
+            result['answer'] += f"💸 Expenses: ₹{int(e):,}\n"
+            result['answer'] += f"{profit_emoji} Net Profit: ₹{int(p):,}\n\n"
+            result['answer'] += f"Based on {c} transactions"
         
         elif intent == 'INSIGHT_QUERY':
             # Check what kind of insight is requested

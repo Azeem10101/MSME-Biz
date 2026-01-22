@@ -760,55 +760,58 @@ input::placeholder {
   }
 }
 
-/* Analytics Widget */
+/* Analytics Widget - Expanded */
 .analytics-widget {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
-  margin-top: 18px;
+  padding: 24px;
+  margin-top: 20px;
 }
 
 .analytics-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 18px;
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .analytics-header .icon {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   background: var(--grad-yellow);
-  border-radius: var(--radius-xs);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .analytics-header h3 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
 }
 
 .charts-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  gap: 24px;
 }
 
 .chart-container {
-  height: 180px;
+  height: 240px;
 }
 
 .chart-title {
-  text-align: center;
-  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 /* Scrollbar */
