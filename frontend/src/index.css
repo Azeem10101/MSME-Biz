@@ -305,6 +305,16 @@ body,
   animation: fadeSlideIn 0.3s ease;
 }
 
+/* Full width for analytics */
+.message-wrapper.full-width {
+  max-width: 100%;
+}
+
+.message-wrapper.full-width .message-content {
+  flex: 1;
+  width: 100%;
+}
+
 @keyframes fadeSlideIn {
   from {
     opacity: 0;
@@ -438,12 +448,12 @@ body,
   font-size: 1rem;
 }
 
-/* Stats Grid */
+/* Stats Grid - 4 columns horizontal */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .stat-card {

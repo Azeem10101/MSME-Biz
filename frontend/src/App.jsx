@@ -373,24 +373,27 @@ function App() {
         </header>
 
         <div className="chat-messages">
-          {messages.map((msg, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={`message-wrapper ${msg.role}`}
-            >
-              <div className={`avatar ${msg.role}`}>
-                {msg.role === 'bot' ? <Bot size={18} color="white" /> : <User size={18} color="white" />}
-              </div>
-              <div className="message-content">
-                <div className="bubble">
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
-                  {msg.result && <ResultDisplay data={msg.result} />}
+          {messages.map((msg, i) => {
+            const hasAnalytics = msg.result?.intent === 'SUMMARY_QUERY' || msg.result?.intent === 'INSIGHT_QUERY';
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`message-wrapper ${msg.role} ${hasAnalytics ? 'full-width' : ''}`}
+              >
+                <div className={`avatar ${msg.role}`}>
+                  {msg.role === 'bot' ? <Bot size={18} color="white" /> : <User size={18} color="white" />}
                 </div>
-              </div>
-            </motion.div>
-          ))}
+                <div className="message-content">
+                  <div className="bubble">
+                    <div style={{ whiteSpace: 'pre-wrap' }}>{msg.text}</div>
+                    {msg.result && <ResultDisplay data={msg.result} />}
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
 
           {loading && (
             <div className="message-wrapper bot">
