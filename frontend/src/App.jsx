@@ -1,12 +1,52 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Bot, User, LayoutDashboard, History, Settings,
-  HelpCircle, Sparkles, ShoppingBag, Wallet, Package, ArrowLeft,
-  Search, Mic, ArrowUp, Activity, Menu, X, Download, TrendingUp, Sun, Moon
+  Bot, User, History, Sparkles, ShoppingBag, Wallet, Package, ArrowLeft,
+  Search, Mic, ArrowUp, Menu, Download, TrendingUp, Sun, Moon, Bell,
+  PieChart, BarChart3, AlertTriangle, CheckCircle2, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnalyticsWidget from './AnalyticsWidget';
 
+// Toast Notification System
+const Toast = ({ message, type, onClose }) => (
+  <motion.div
+    initial={{ opacity: 0, y: -20, scale: 0.9 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: -20, scale: 0.9 }}
+    style={{
+      position: 'fixed',
+      top: '24px',
+      right: '24px',
+      padding: '16px 24px',
+      borderRadius: '12px',
+      background: type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' :
+        type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' :
+          'linear-gradient(135deg, #667eea, #764ba2)',
+      color: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+      zIndex: 9999,
+      fontWeight: 600
+    }}
+  >
+    {type === 'success' ? <CheckCircle2 size={20} /> :
+      type === 'error' ? <AlertTriangle size={20} /> : <Bell size={20} />}
+    {message}
+    <button onClick={onClose} style={{
+      background: 'transparent',
+      border: 'none',
+      color: 'white',
+      cursor: 'pointer',
+      marginLeft: '8px'
+    }}>
+      <X size={18} />
+    </button>
+  </motion.div>
+);
+
+// Enhanced Quick Sell Form
 const QuickSellForm = ({ item, onCancel, onSubmit }) => {
   const [qty, setQty] = useState(1);
   const [customer, setCustomer] = useState('');
@@ -20,185 +60,186 @@ const QuickSellForm = ({ item, onCancel, onSubmit }) => {
       onClick={onCancel}
     >
       <motion.div
-        initial={{ y: 50, scale: 0.9 }}
-        animate={{ y: 0, scale: 1 }}
-        exit={{ y: 50, scale: 0.9 }}
+        initial={{ y: 50, scale: 0.9, opacity: 0 }}
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        exit={{ y: 50, scale: 0.9, opacity: 0 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
         className="quick-form"
         onClick={e => e.stopPropagation()}
       >
-        <h3 style={{ fontFamily: 'Syne', fontSize: '1.5rem', marginBottom: '8px' }}>
-          {item.icon} Quick Sell: {item.name.split(' ')[0]}
+        <h3>
+          <span style={{ marginRight: '8px' }}>{item.icon}</span>
+          Quick Sell: {item.name.split(' ')[0]}
         </h3>
-        <p style={{ fontWeight: '600', marginBottom: '20px' }}>Current Price: ₹{item.price}</p>
+        <p style={{
+          color: 'var(--text-secondary)',
+          marginBottom: '24px',
+          fontSize: '0.95rem'
+        }}>
+          Unit Price: <strong style={{ color: 'var(--accent-success)' }}>₹{item.price}</strong>
+        </p>
 
         <div className="input-group">
-          <label style={{ display: 'block', fontWeight: '800', marginBottom: '4px', fontSize: '0.8rem' }}>QUANTITY</label>
+          <label>Quantity</label>
           <input
             type="number"
             value={qty}
-            onChange={(e) => setQty(Number(e.target.value))}
+            onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
             min="1"
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: 'var(--border-thin)',
-              borderRadius: '8px',
-              fontFamily: 'Space Grotesk',
-              fontWeight: '700',
-              fontSize: '1.2rem',
-              boxShadow: 'var(--shadow-brutal)',
-              background: 'var(--white)',
-              color: 'var(--black)'
-            }}
           />
         </div>
 
-        <div className="input-group" style={{ marginTop: '20px' }}>
-          <label style={{ display: 'block', fontWeight: '800', marginBottom: '4px', fontSize: '0.8rem' }}>CUSTOMER NAME (OPTIONAL)</label>
+        <div className="input-group">
+          <label>Customer Name (Optional)</label>
           <input
             type="text"
             placeholder="e.g. Ramesh"
             value={customer}
             onChange={(e) => setCustomer(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              border: 'var(--border-thin)',
-              borderRadius: '8px',
-              fontFamily: 'Space Grotesk',
-              fontWeight: '600',
-              boxShadow: 'var(--shadow-brutal)',
-              background: 'var(--white)',
-              color: 'var(--black)'
-            }}
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-          <button
+        <div style={{
+          marginTop: '8px',
+          padding: '12px',
+          background: 'var(--glass-bg)',
+          borderRadius: '8px',
+          textAlign: 'center'
+        }}>
+          <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Total Amount</span>
+          <div style={{
+            fontSize: '1.8rem',
+            fontWeight: '800',
+            background: 'var(--gradient-teal)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            ₹{qty * item.price}
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="nav-item active"
-            style={{ flex: 1, justifyContent: 'center', padding: '16px' }}
+            style={{ flex: 1, justifyContent: 'center', padding: '14px' }}
             onClick={() => onSubmit(qty, customer)}
           >
+            <CheckCircle2 size={18} />
             Confirm Sale
-          </button>
-          <button
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             className="nav-item"
-            style={{ flex: 1, justifyContent: 'center', padding: '16px' }}
+            style={{ flex: 1, justifyContent: 'center', padding: '14px' }}
             onClick={onCancel}
           >
             Cancel
-          </button>
+          </motion.button>
         </div>
       </motion.div>
     </motion.div>
   );
 };
 
+// Theme Toggle
 const ThemeToggle = ({ isDark, onToggle }) => (
   <motion.button
-    whileHover={{ scale: 1.05, x: -2, y: -2, boxShadow: '4px 4px 0px var(--shadow-color)' }}
+    whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     className="theme-toggle"
     onClick={onToggle}
-    style={{
-      background: 'var(--black)',
-      color: 'var(--white)',
-      border: 'var(--border-thin)',
-      padding: '8px 16px',
-      borderRadius: '20px',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      fontWeight: '900',
-      fontSize: '0.8rem',
-      cursor: 'pointer',
-      boxShadow: '2px 2px 0px var(--shadow-color)',
-      transition: 'box-shadow 0.2s, transform 0.2s',
-      fontFamily: 'Syne',
-      textTransform: 'uppercase'
-    }}
   >
     {isDark ? <Sun size={16} /> : <Moon size={16} />}
     <span>{isDark ? 'Light' : 'Dark'}</span>
   </motion.button>
 );
 
+// Transaction History Component
 const TransactionHistory = ({ transactions }) => {
   const formatDate = (dateStr) => {
     const today = new Date().toISOString().split('T')[0];
     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
     if (dateStr === today) return 'Today';
     if (dateStr === yesterday) return 'Yesterday';
-    return dateStr.split('-').reverse().join('-');
+    return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
   return (
-    <div style={{ marginTop: '16px', background: 'var(--white)', border: 'var(--border-thick)', borderRadius: '12px', boxShadow: 'var(--shadow-brutal)', overflow: 'hidden' }}>
-      <div style={{ padding: '12px', background: '#bfdbfe', borderBottom: 'var(--border-thin)', fontWeight: '900', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#000' }}>
-        <History size={16} /> RECENT TRANSACTIONS
+    <div className="transaction-list">
+      <div className="list-header">
+        <History size={16} /> Recent Transactions
       </div>
       <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
         {transactions.map((t, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderBottom: i === transactions.length - 1 ? 'none' : '1px solid #e5e7eb' }}>
+          <motion.div
+            key={i}
+            className="list-item"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: i * 0.05 }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
-                width: '32px', height: '32px', borderRadius: '50%',
-                background: t.type === 'SALE' ? '#dcfce7' : '#fee2e2',
-                border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                width: '36px', height: '36px', borderRadius: '8px',
+                background: t.type === 'SALE' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: t.type === 'SALE' ? 'var(--accent-success)' : 'var(--accent-error)'
               }}>
-                {t.type === 'SALE' ? '🟢' : '🔴'}
+                {t.type === 'SALE' ? <TrendingUp size={18} /> : <Wallet size={18} />}
               </div>
               <div>
-                <div style={{ fontWeight: '800', color: 'var(--black)', fontSize: '0.9rem' }}>
-                  {t.type === 'SALE' ? (t.customer ? `${t.customer} bought ${t.item}` : `Sold ${t.item}`) : t.item}
+                <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                  {t.type === 'SALE' ? (t.customer ? `${t.customer} • ${t.item}` : t.item) : t.item}
                 </div>
-                <div style={{ fontSize: '0.7rem', color: '#666', fontWeight: '600' }}>
-                  {formatDate(t.date)} • {t.quantity > 0 ? `${t.quantity} Units` : 'Expense'}
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  {formatDate(t.date)} {t.quantity > 0 && `• ${t.quantity} units`}
                 </div>
               </div>
             </div>
-            <div style={{ fontWeight: '900', fontSize: '1rem', color: t.type === 'SALE' ? '#15803d' : '#b91c1c' }}>
-              {t.type === 'SALE' ? '+' : '-'}₹{Math.abs(t.amount)}
+            <div style={{
+              fontWeight: '700',
+              color: t.type === 'SALE' ? 'var(--accent-success)' : 'var(--accent-error)'
+            }}>
+              {t.type === 'SALE' ? '+' : '-'}₹{Math.abs(t.amount).toLocaleString('en-IN')}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
   );
 };
 
+// Inventory List Component
 const InventoryList = ({ items }) => (
-  <div style={{ marginTop: '16px', background: 'var(--white)', border: 'var(--border-thick)', borderRadius: '12px', boxShadow: 'var(--shadow-brutal)', overflow: 'hidden' }}>
-    <div style={{ padding: '12px', background: '#c084fc', borderBottom: 'var(--border-thin)', fontWeight: '900', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'white' }}>
-      <Package size={16} /> CURRENT STOCK
+  <div className="inventory-list">
+    <div className="list-header">
+      <Package size={16} /> Current Stock
     </div>
     <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
       {items.map((item, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', borderBottom: '1px solid #e5e7eb' }}>
-          <span style={{ fontWeight: '700' }}>{item.item}</span>
-          <span style={{
-            background: item.stock < 5 ? '#fecaca' : '#dcfce7',
-            padding: '4px 12px',
-            borderRadius: '12px',
-            border: '2px solid #000',
-            fontWeight: '800',
-            fontSize: '0.8rem',
-            color: '#000'
-          }}>
-            {item.stock} units
+        <motion.div
+          key={i}
+          className="list-item"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: i * 0.05 }}
+        >
+          <span style={{ fontWeight: '600' }}>{item.item}</span>
+          <span className={`stock-badge ${item.stock < 10 ? 'low' : 'ok'}`}>
+            {Math.round(item.stock)} units
           </span>
-        </div>
+        </motion.div>
       ))}
     </div>
   </div>
 );
 
+// Result Display Component
 const ResultDisplay = ({ data }) => {
-  // If no data or UNKNOWN, don't show a card at all (the bot text will handle the error)
-  if (!data || data.intent === 'UNKNOWN') {
-    return null;
-  }
+  if (!data || data.intent === 'UNKNOWN') return null;
 
   if (data.view_type === 'inventory_list') {
     return <InventoryList items={data.inventory} />;
@@ -210,62 +251,71 @@ const ResultDisplay = ({ data }) => {
     return (
       <div style={{ marginTop: '16px' }}>
         {data.stats && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '12px',
-            marginBottom: '16px'
-          }}>
-            <div style={{ padding: '12px', border: 'var(--border-thick)', borderRadius: '12px', background: '#4ade80', boxShadow: 'var(--shadow-brutal)', color: '#000' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: '800', opacity: 0.8 }}>TOTAL SALES</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '900' }}>₹{data.stats.total_sales || 0}</div>
-            </div>
-            <div style={{ padding: '12px', border: 'var(--border-thick)', borderRadius: '12px', background: '#fb923c', boxShadow: 'var(--shadow-brutal)', color: '#000' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: '800', opacity: 0.8 }}>EXPENSES</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '900' }}>₹{data.stats.total_expenses || 0}</div>
-            </div>
-            <div style={{ padding: '12px', border: 'var(--border-thick)', borderRadius: '12px', background: '#FBFF00', boxShadow: 'var(--shadow-brutal)', color: '#000' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: '800', opacity: 0.8 }}>NET PROFIT</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '900' }}>₹{data.stats.net_profit || 0}</div>
-            </div>
-            <div style={{ padding: '12px', border: 'var(--border-thick)', borderRadius: '12px', background: 'var(--white)', boxShadow: 'var(--shadow-brutal)', color: 'var(--black)' }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: '800', opacity: 0.8 }}>RECORDS</div>
-              <div style={{ fontSize: '1.4rem', fontWeight: '900' }}>{data.stats.transaction_count || 0}</div>
-            </div>
+          <div className="stats-grid">
+            <motion.div
+              className="stat-card sales"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="stat-label">Sales</div>
+              <div className="stat-value">₹{(data.stats.total_sales || 0).toLocaleString('en-IN')}</div>
+            </motion.div>
+            <motion.div
+              className="stat-card expenses"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="stat-label">Expenses</div>
+              <div className="stat-value">₹{(data.stats.total_expenses || 0).toLocaleString('en-IN')}</div>
+            </motion.div>
+            <motion.div
+              className="stat-card profit"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="stat-label">Profit</div>
+              <div className="stat-value">₹{(data.stats.net_profit || 0).toLocaleString('en-IN')}</div>
+            </motion.div>
+            <motion.div
+              className="stat-card records"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <div className="stat-label">Records</div>
+              <div className="stat-value">{data.stats.transaction_count || 0}</div>
+            </motion.div>
           </div>
         )}
 
-        {/* CONDITIONALLY RENDER LIST OR CHART */}
         {data.view_type === 'list' && data.transactions ? (
           <TransactionHistory transactions={data.transactions} />
         ) : (
           <AnalyticsWidget />
         )}
-
-        <div style={{
-          background: '#a855f7',
-          color: '#fff',
-          padding: '4px 10px',
-          borderRadius: '4px',
-          fontSize: '0.6rem',
-          fontWeight: '900',
-          display: 'inline-block',
-          border: '1.5px solid #000',
-          marginBottom: '8px',
-          marginTop: '16px'
-        }}>
-          {data.view_type === 'list' ? 'HISTORY VIEW' : 'DASHBOARD VIEW'} • {data.start_date || new Date().toISOString().split('T')[0]}
-        </div>
       </div>
     );
   }
 
+  // Entry cards
+  const getGradient = () => {
+    switch (data.intent) {
+      case 'SALE_ENTRY': return 'var(--gradient-teal)';
+      case 'EXPENSE_ENTRY': return 'var(--gradient-orange)';
+      case 'INVENTORY_UPDATE': case 'STOCK_PURCHASE': return 'var(--gradient-purple)';
+      default: return 'var(--gradient-blue)';
+    }
+  };
+
   const getIcon = () => {
     switch (data.intent) {
-      case 'SALE_ENTRY': return <ShoppingBag size={14} color="#000" />;
-      case 'EXPENSE_ENTRY': return <Wallet size={14} color="#000" />;
-      case 'INVENTORY_UPDATE': return <Package size={14} color="#000" />;
-      default: return <Sparkles size={14} color="#000" />;
+      case 'SALE_ENTRY': return <ShoppingBag size={14} />;
+      case 'EXPENSE_ENTRY': return <Wallet size={14} />;
+      case 'INVENTORY_UPDATE': case 'STOCK_PURCHASE': return <Package size={14} />;
+      default: return <Sparkles size={14} />;
     }
   };
 
@@ -273,40 +323,49 @@ const ResultDisplay = ({ data }) => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`result-card ${data.intent}`}
+      className="result-card"
     >
-      <div className="intent-badge">
+      <div className="intent-badge" style={{ background: getGradient() }}>
         {getIcon()}
-        {data.intent.replace('_', ' ')}
+        {data.intent.replace(/_/g, ' ')}
       </div>
 
       <div className="data-grid">
         {data.date && (
           <div className="data-item">
             <span className="label">Date</span>
-            <span className="value">{data.date.split('-').reverse().join('-')}</span>
+            <span className="value">{new Date(data.date).toLocaleDateString('en-IN', {
+              day: 'numeric', month: 'short', year: 'numeric'
+            })}</span>
           </div>
         )}
 
-        {data.intent === 'SALE_ENTRY' && (
+        {data.intent === 'SALE_ENTRY' && data.items && (
           <>
-            <div style={{ margin: '8px 0', borderTop: '2px solid #000', paddingTop: '12px' }}>
-              {data.items.map((item, i) => (
-                <div key={i} className="data-item" style={{ marginBottom: '6px' }}>
-                  <span className="label" style={{ color: '#000' }}>{item.product_name} ({item.quantity})</span>
-                  <span className="value">₹{item.unit_price}</span>
-                </div>
-              ))}
-            </div>
+            {data.items.map((item, i) => (
+              <div key={i} className="data-item">
+                <span className="label">{item.product_name} × {item.quantity}</span>
+                <span className="value">₹{(item.unit_price * item.quantity).toLocaleString('en-IN')}</span>
+              </div>
+            ))}
             {data.customer_name && (
-              <div className="data-item" style={{ marginBottom: '8px' }}>
+              <div className="data-item">
                 <span className="label">Customer</span>
                 <span className="value">{data.customer_name}</span>
               </div>
             )}
-            <div className="data-item" style={{ marginTop: '8px', borderTop: 'var(--border-thick)', paddingTop: '12px' }}>
-              <span className="label" style={{ fontWeight: '800', color: 'var(--black)' }}>Total Revenue</span>
-              <span className="value" style={{ fontSize: '1.2rem', color: 'var(--black)', fontWeight: '900' }}>₹{data.total}</span>
+            <div className="data-item" style={{
+              marginTop: '8px',
+              paddingTop: '8px',
+              borderTop: '1px solid var(--glass-border)'
+            }}>
+              <span className="label" style={{ fontWeight: 700 }}>Total Revenue</span>
+              <span className="value" style={{
+                fontSize: '1.2rem',
+                background: 'var(--gradient-teal)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent'
+              }}>₹{data.total.toLocaleString('en-IN')}</span>
             </div>
           </>
         )}
@@ -319,7 +378,9 @@ const ResultDisplay = ({ data }) => {
             </div>
             <div className="data-item">
               <span className="label">Amount</span>
-              <span className="value" style={{ color: 'var(--black)', fontWeight: '900' }}>₹{data.amount}</span>
+              <span className="value" style={{ color: 'var(--accent-error)' }}>
+                ₹{data.amount.toLocaleString('en-IN')}
+              </span>
             </div>
             {data.description && (
               <div className="data-item">
@@ -330,16 +391,18 @@ const ResultDisplay = ({ data }) => {
           </>
         )}
 
-        {data.intent === 'INVENTORY_UPDATE' && (
+        {(data.intent === 'INVENTORY_UPDATE' || data.intent === 'STOCK_PURCHASE') && (
           <>
             <div className="data-item">
               <span className="label">Product</span>
-              <span className="value">{data.item}</span>
+              <span className="value">{data.item || data.item_name}</span>
             </div>
             <div className="data-item">
               <span className="label">Change</span>
-              <span className="value" style={{ color: 'var(--black)', fontWeight: '900' }}>
-                {data.quantity_change > 0 ? '+' : ''}{data.quantity_change} Units
+              <span className="value" style={{
+                color: (data.quantity_change || data.quantity) > 0 ? 'var(--accent-success)' : 'var(--accent-error)'
+              }}>
+                {(data.quantity_change || data.quantity) > 0 ? '+' : ''}{data.quantity_change || data.quantity} units
               </span>
             </div>
           </>
@@ -349,34 +412,22 @@ const ResultDisplay = ({ data }) => {
   );
 };
 
-
+// Main App Component
 function App() {
   const [messages, setMessages] = useState([
-    { role: 'bot', text: 'Namaste! I am your AI Business Assistant. Let\'s get started!' }
+    {
+      role: 'bot',
+      text: '👋 Welcome to MSME BizAssist! I\'m your AI-powered business companion. Try saying "Sold 5 notebooks for 500" or "Show my analytics"'
+    }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  // Default open on desktop
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [lowStockCount, setLowStockCount] = useState(0);
-
-  useEffect(() => {
-    // Check for low stock
-    fetch('http://localhost:8000/stats/low_stock')
-      .then(res => res.json())
-      .then(data => setLowStockCount(data.count))
-      .catch(err => console.error("Low stock check failed", err));
-  }, []); // Run on mount
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-  }, [isDarkMode]);
+  const [toast, setToast] = useState(null);
   const [activeQuickItem, setActiveQuickItem] = useState(null);
+  const chatEndRef = useRef(null);
 
   const [inventory] = useState([
     { id: 1, name: 'Milk (1L)', price: 60, icon: '🥛' },
@@ -385,55 +436,61 @@ function App() {
     { id: 4, name: 'Rice (1kg)', price: 80, icon: '🍚' },
   ]);
 
-  const chatEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, loading]);
-
-  const handleReset = () => {
-    setMessages([
-      { role: 'bot', text: 'Namaste! I am your AI Business Assistant. Let\'s get started!' }
-    ]);
-  };
-
   const [isListening, setIsListening] = useState(false);
 
+  // Effects
+  useEffect(() => {
+    document.body.classList.toggle('light-mode', !isDarkMode);
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    fetch('http://localhost:8000/stats/low_stock')
+      .then(res => res.json())
+      .then(data => setLowStockCount(data.count))
+      .catch(() => { });
+  }, [messages]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  // Show toast helper
+  const showToast = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  // Mic handler
   const handleMicClick = () => {
     if (!('webkitSpeechRecognition' in window)) {
-      alert("Browser does not support speech recognition");
+      showToast('Speech recognition not supported', 'error');
       return;
     }
 
     const recognition = new window.webkitSpeechRecognition();
     recognition.continuous = false;
-    recognition.lang = 'en-US';
+    recognition.lang = 'en-IN';
 
     recognition.onstart = () => setIsListening(true);
     recognition.onend = () => setIsListening(false);
-
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setInput(prev => (prev + " " + transcript).trim());
+      showToast('Voice captured!', 'success');
     };
+    recognition.onerror = () => showToast('Voice recognition failed', 'error');
 
     recognition.start();
   };
 
+  // Quick sale handler
   const handleQuickSale = async (qty, customer, customMessage) => {
     let message = customMessage;
-
     if (!message) {
       const item = activeQuickItem;
       setActiveQuickItem(null);
-      message = `Sold ${qty} ${item.name} for ${item.price} each${customer ? ` to ${customer}` : ''}`;
-    } else {
-      // If it's a custom action (like History/Help), just send it.
-      // No item logic needed.
+      message = `Sold ${qty} ${item.name} for ${item.price * qty} to ${customer || 'customer'}`;
+      showToast(`Sale recorded: ${qty}x ${item.name.split(' ')[0]}`, 'success');
     }
 
     setMessages(prev => [...prev, { role: 'user', text: message }]);
@@ -445,30 +502,33 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: message,
-          history: messages.map(m => ({
-            role: m.role,
-            text: m.text,
-            result: m.result
-          }))
+          history: messages.slice(-10).map(m => ({ role: m.role, text: m.text, result: m.result }))
         })
       });
 
       const data = await response.json();
-      // If answer exists, use it. If not, maybe it's an error message? Fallback to generic.
-      const botText = data.answer || data.message || 'Quick Sale Recorded!';
-      setMessages(prev => [...prev, { role: 'bot', text: botText, result: data }]);
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        text: data.answer || data.message || 'Operation completed!',
+        result: data
+      }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Error recording quick sale.', isError: true }]);
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        text: '⚠️ Connection issue. Please check if the server is running.',
+        isError: true
+      }]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim() || loading) return;
 
-    const userMessage = input;
+    const userMessage = input.trim();
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setLoading(true);
@@ -479,198 +539,193 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage,
-          history: messages.map(m => ({
-            role: m.role,
-            text: m.text,
-            result: m.result
-          }))
+          history: messages.slice(-10).map(m => ({ role: m.role, text: m.text, result: m.result }))
         })
       });
 
       const data = await response.json();
-      const botText = data.answer || data.message || 'Data Extracted Successfully!';
-      setMessages(prev => [...prev, { role: 'bot', text: botText, result: data }]);
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        text: data.answer || data.message || 'Data processed successfully!',
+        result: data
+      }]);
+
+      if (data.intent === 'SALE_ENTRY') showToast('Sale recorded!', 'success');
+      if (data.intent === 'EXPENSE_ENTRY') showToast('Expense logged!', 'success');
+      if (data.intent === 'STOCK_PURCHASE') showToast('Stock restocked!', 'success');
     } catch (err) {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Oops! Something went wrong with the system connection.', isError: true }]);
+      setMessages(prev => [...prev, {
+        role: 'bot',
+        text: '⚠️ Unable to process request. Please try again.',
+        isError: true
+      }]);
+      showToast('Request failed', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle Instant Report View
-  const handleViewReport = () => {
-    window.open('http://localhost:8000/export/html', '_blank');
-  };
-
   return (
     <div className="app-layout">
-      {/* Mobile Toggle Button (Visible only on mobile) */}
-      <button
-        className="icon-btn"
-        style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 1000, display: 'none' }}
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      {/* Toast Notifications */}
+      <AnimatePresence>
+        {toast && <Toast {...toast} onClose={() => setToast(null)} />}
+      </AnimatePresence>
 
-      {/* Sidebar: Add 'closed' class if sidebarOpen is false */}
+      {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
-        <div className="logo-area" style={{ justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="logo-area">
+          <div>
             <div className="logo-icon">
-              <Sparkles size={20} color="#000" weight="bold" />
+              <Sparkles size={22} color="white" />
             </div>
-            <span className="logo-text" style={{ color: 'var(--black)' }}>MSME<br />BIZ</span>
+            <span className="logo-text">MSME<br />BizAssist</span>
           </div>
-          {/* Close Sidebar Button */}
-          <button className="icon-btn" style={{ background: 'var(--white)', border: 'var(--border-thin)', color: 'var(--black)' }} onClick={() => setSidebarOpen(false)}>
-            <ArrowLeft size={20} />
-          </button>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="icon-btn"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <ArrowLeft size={18} />
+          </motion.button>
         </div>
 
         <nav className="nav-section">
-          <button
+          {/* Inventory Button with Badge */}
+          <motion.button
+            whileHover={{ x: 4 }}
             className="nav-item active"
-            onClick={() => handleQuickSale(0, '', 'Show me my inventory list')}
-            title="Check Stock"
-            style={{ color: '#000', position: 'relative' }}
+            onClick={() => handleQuickSale(0, '', 'Show inventory')}
+            style={{ position: 'relative' }}
           >
-            <Package size={22} color="#000" weight="bold" />
+            <Package size={20} />
             <span>Inventory</span>
             {lowStockCount > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '12px',
-                background: '#ef4444',
-                color: 'white',
-                fontSize: '0.7rem',
-                fontWeight: '900',
-                padding: '2px 6px',
-                borderRadius: '99px',
-                border: '2px solid #000'
-              }}>
-                {lowStockCount}
-              </span>
+              <span className="notification-badge">{lowStockCount}</span>
             )}
-          </button>
+          </motion.button>
 
-          <div style={{ marginTop: '24px', marginBottom: '12px' }}>
-            <span className="label" style={{ paddingLeft: '12px', fontSize: '0.75rem', textTransform: 'uppercase' }}>Quick Sell</span>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '8px' }}>
+          {/* Quick Sell Section */}
+          <div style={{ marginTop: '16px', marginBottom: '8px' }}>
+            <span style={{
+              fontSize: '0.7rem',
+              fontWeight: '700',
+              textTransform: 'uppercase',
+              color: 'var(--text-muted)',
+              paddingLeft: '16px',
+              letterSpacing: '0.1em'
+            }}>Quick Sell</span>
+            <div className="quick-sell-grid" style={{ marginTop: '8px' }}>
               {inventory.map(item => (
-                <button
+                <motion.button
                   key={item.id}
-                  className="icon-btn"
-                  style={{
-                    flexDirection: 'column',
-                    height: 'auto',
-                    padding: '12px 8px',
-                    fontSize: '0.8rem',
-                    gap: '4px'
-                  }}
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="quick-sell-btn"
                   onClick={() => setActiveQuickItem(item)}
                 >
-                  <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
-                  <span style={{ fontWeight: '700' }}>{item.name.split(' ')[0]}</span>
-                </button>
+                  <span>{item.icon}</span>
+                  <span>{item.name.split(' ')[0]}</span>
+                </motion.button>
               ))}
             </div>
           </div>
 
-          <button
+          {/* Analytics */}
+          <motion.button
+            whileHover={{ x: 4 }}
             className="nav-item"
-            style={{ marginBottom: '16px', backgroundColor: '#FBFF00', border: 'var(--border-thin)', boxShadow: 'var(--shadow-brutal)', color: '#000', fontWeight: 'bold' }}
-            onClick={() => handleQuickSale(0, '', 'Show me the sales trends')}
+            onClick={() => handleQuickSale(0, '', 'Show analytics')}
+            style={{
+              background: 'linear-gradient(135deg, rgba(245, 175, 25, 0.2), rgba(241, 39, 17, 0.2))',
+              marginTop: '8px'
+            }}
           >
-            <TrendingUp size={22} color="#000" />
+            <BarChart3 size={20} />
             <span>Analytics</span>
-          </button>
+          </motion.button>
 
-          <button
+          {/* History */}
+          <motion.button
+            whileHover={{ x: 4 }}
             className="nav-item"
-            style={{ backgroundColor: '#60a5fa', border: 'var(--border-thin)', boxShadow: 'var(--shadow-brutal)', color: '#000', fontWeight: 'bold' }}
-            onClick={() => handleQuickSale(0, '', 'Show me my recent history')}
+            onClick={() => handleQuickSale(0, '', 'Show recent transactions')}
           >
-            <History size={22} color="#000" />
+            <History size={20} />
             <span>History</span>
-          </button>
+          </motion.button>
 
-          <button
+          {/* Export */}
+          <motion.button
+            whileHover={{ x: 4 }}
             className="nav-item"
-            style={{ marginTop: '16px', backgroundColor: '#4ade80', border: 'var(--border-thin)', boxShadow: 'var(--shadow-brutal)', color: '#000', fontWeight: 'bold' }}
-            onClick={handleViewReport}
+            onClick={() => window.open('http://localhost:8000/export/html', '_blank')}
+            style={{ marginTop: '8px' }}
           >
-            <Download size={22} color="#000" />
-            <span>View Dashboard (PDF/HTML)</span>
-          </button>
+            <Download size={20} />
+            <span>Export Report</span>
+          </motion.button>
         </nav>
 
-        <button
+        {/* AI Concierge */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           className="nav-item"
+          onClick={() => handleQuickSale(0, '', 'What can you help me with?')}
           style={{
             marginTop: 'auto',
-            background: 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)',
-            border: 'var(--border-thin)',
-            boxShadow: 'var(--shadow-brutal)',
-            color: '#000',
-            fontWeight: 'bold'
+            background: 'var(--gradient-purple)',
+            color: 'white'
           }}
-          onClick={() => handleQuickSale(0, '', 'What can you do?')}
         >
-          <Sparkles size={22} color="#000" />
-          <span>AI Concierge</span>
-        </button>
+          <Sparkles size={20} />
+          <span>AI Assistant</span>
+        </motion.button>
       </aside>
 
       {/* Main Content */}
       <main className="main-content">
+        {/* Header */}
         <header className="chat-header">
-          <div className="header-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Open Sidebar Button (Visible if Closed) */}
+          <div className="header-info" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             {!sidebarOpen && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 className="icon-btn"
-                style={{
-                  background: 'var(--white)',
-                  color: 'var(--black)',
-                  border: 'var(--border-thin)',
-                  boxShadow: '2px 2px 0px var(--black)'
-                }}
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu size={20} />
-              </button>
+              </motion.button>
             )}
             <div>
-              <h2>Biz Insight Dashboard</h2>
-              <p>Multilingual Smart Extraction v3.0</p>
+              <h2>BizAssist Dashboard</h2>
+              <p>AI-Powered Business Intelligence • v2.0</p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
-            <div className="avatar bot">
-              <HelpCircle size={24} color="var(--black)" />
-            </div>
           </div>
         </header>
 
+        {/* Chat Messages */}
         <div className="chat-messages">
           <AnimatePresence mode="popLayout">
             {messages.map((msg, idx) => (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
                 className={`message-wrapper ${msg.role}`}
               >
                 <div className={`avatar ${msg.role}`}>
-                  {msg.role === 'bot' ? (
-                    <Bot size={24} color="var(--black)" />
-                  ) : <User size={24} />}
+                  {msg.role === 'bot' ? <Bot size={20} color="white" /> : <User size={20} color="white" />}
                 </div>
                 <div className="message-content">
-                  <div className="bubble">
+                  <div className="bubble" style={msg.isError ? { borderColor: 'var(--accent-error)' } : {}}>
                     {msg.text}
                     {msg.result && <ResultDisplay data={msg.result} />}
                   </div>
@@ -679,56 +734,61 @@ function App() {
             ))}
           </AnimatePresence>
 
+          {/* Loading */}
           {loading && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="message-wrapper bot">
-              <div className="avatar bot"><Bot size={24} /></div>
-              <div className="message-content">
-                <div className="bubble" style={{ display: 'flex', gap: '8px' }}>
-                  {[0, 1, 2].map(i => (
-                    <motion.div
-                      key={i}
-                      animate={{ y: [0, -8, 0], backgroundColor: ['#000', '#fb923c', '#000'] }}
-                      transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.1 }}
-                      style={{ width: 8, height: 8, borderRadius: '50%', border: '1px solid #000' }}
-                    />
-                  ))}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="message-wrapper bot"
+            >
+              <div className="avatar bot"><Bot size={20} color="white" /></div>
+              <div className="bubble">
+                <div className="loading-dots">
+                  <div className="loading-dot" />
+                  <div className="loading-dot" />
+                  <div className="loading-dot" />
                 </div>
               </div>
             </motion.div>
           )}
+
           <div ref={chatEndRef} />
         </div>
+
+        {/* Input */}
         <footer className="input-container">
           <form className="input-box" onSubmit={handleSubmit}>
-            <Search size={24} color="var(--black)" />
+            <Search size={20} style={{ color: 'var(--text-muted)' }} />
             <input
               type="text"
-              placeholder="Sold 5 items for 1000..."
+              placeholder="Try: 'Sold 5 notebooks for 500' or 'Show analytics'..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
             />
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <style>{`
-                  .mic-btn-active { background: #ef4444 !important; color: white !important; border: 2px solid var(--black) !important; }
-                  .mic-btn-inactive { background: var(--white) !important; color: var(--black) !important; border: var(--border-thin) !important; }
-                `}</style>
-              <button
-                type="button"
-                className={`icon-btn ${isListening ? 'mic-btn-active' : 'mic-btn-inactive'}`}
-                onClick={handleMicClick}
-              >
-                <Mic size={24} />
-              </button>
-              <button type="submit" className="send-btn" disabled={loading || !input.trim()}>
-                <ArrowUp size={24} strokeWidth={3} />
-              </button>
-            </div>
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className={`icon-btn ${isListening ? 'mic-btn-active' : ''}`}
+              onClick={handleMicClick}
+            >
+              <Mic size={20} />
+            </motion.button>
+            <motion.button
+              type="submit"
+              className="send-btn"
+              disabled={loading || !input.trim()}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <ArrowUp size={22} strokeWidth={2.5} />
+            </motion.button>
           </form>
         </footer>
       </main>
 
-      {/* Quick Sell Popup */}
+      {/* Quick Sell Modal */}
       <AnimatePresence>
         {activeQuickItem && (
           <QuickSellForm
