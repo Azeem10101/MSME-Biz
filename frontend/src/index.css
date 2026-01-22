@@ -331,14 +331,15 @@ h6 {
 
 /* Chat Header */
 .chat-header {
-  padding: var(--spacing-md) var(--spacing-xl);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  padding-top: var(--spacing-xl);
   background: var(--glass-bg);
   backdrop-filter: var(--glass-blur);
   border-bottom: 1px solid var(--glass-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 70px;
+  min-height: 80px;
 }
 
 .header-info h2 {
