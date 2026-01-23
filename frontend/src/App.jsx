@@ -533,26 +533,10 @@ function App() {
             className="nav-item active"
             onClick={() => handleQuickSale(0, '', 'Show me my inventory list')}
             title="Check Stock"
-            style={{ color: '#000', position: 'relative' }}
+            style={{ color: '#000' }}
           >
             <Package size={22} color="#000" weight="bold" />
             <span>Inventory</span>
-            {lowStockCount > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '8px',
-                right: '12px',
-                background: '#ef4444',
-                color: 'white',
-                fontSize: '0.7rem',
-                fontWeight: '900',
-                padding: '2px 6px',
-                borderRadius: '99px',
-                border: '2px solid #000'
-              }}>
-                {lowStockCount}
-              </span>
-            )}
           </button>
 
           <div style={{ marginTop: '24px', marginBottom: '12px' }}>
