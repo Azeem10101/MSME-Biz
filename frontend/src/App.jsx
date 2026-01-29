@@ -679,41 +679,48 @@ function App() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Connection Status */}
+            {/* Connection Status */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              padding: '6px 12px',
-              background: isConnected ? '#dcfce7' : '#fee2e2',
-              border: 'var(--border-thin)',
+              padding: '8px 16px',
+              background: isConnected ? '#ffffff' : '#fee2e2',
+              color: isConnected ? '#166534' : '#991b1b',
+              border: '2px solid #000',
               borderRadius: '20px',
               fontSize: '0.75rem',
-              fontWeight: '800'
+              fontWeight: '900',
+              boxShadow: '2px 2px 0px #000'
             }}>
-              {isConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
+              {isConnected ? <Wifi size={14} strokeWidth={3} /> : <WifiOff size={14} />}
               {isConnected ? 'LIVE' : 'OFFLINE'}
             </div>
 
             {/* New Chat Button */}
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, x: -2, y: -2, boxShadow: '4px 4px 0px var(--shadow-color)' }}
               whileTap={{ scale: 0.95 }}
               onClick={handleReset}
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                padding: '8px 14px',
-                background: 'var(--white)',
+                padding: '8px 16px',
+                background: 'var(--black)',
+                color: 'var(--white)',
                 border: 'var(--border-thin)',
-                borderRadius: '8px',
+                borderRadius: '20px',
                 cursor: 'pointer',
-                fontWeight: '700',
+                fontWeight: '900',
                 fontSize: '0.8rem',
-                boxShadow: '2px 2px 0px var(--shadow-color)'
+                fontFamily: 'Syne',
+                textTransform: 'uppercase',
+                boxShadow: '2px 2px 0px var(--shadow-color)',
+                transition: 'box-shadow 0.2s, transform 0.2s'
               }}
             >
-              <RotateCcw size={16} />
+              <RotateCcw size={14} strokeWidth={3} />
               New
             </motion.button>
 

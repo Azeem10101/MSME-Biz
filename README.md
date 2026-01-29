@@ -10,7 +10,7 @@
 
 <br/>
 
-![MSME BIZ Dashboard](screenshots/analytics.png)
+![MSME BIZ Dashboard](screenshots/dashboard.png)
 
 ---
 
@@ -27,9 +27,13 @@ MSME BIZ is an AI-powered business assistant designed specifically for Indian Mi
 
 ## 📸 Screenshots
 
-| Inventory Management | AI Concierge |
-|----------------------|--------------|
-| ![Inventory](screenshots/inventory.png) | ![AI Assistant](screenshots/assistant.png) |
+| 📊 Analytics | 📦 Inventory |
+|-------------|--------------|
+| ![Analytics](screenshots/analytics.png) | ![Inventory](screenshots/inventory.png) |
+
+| 🤖 AI Concierge | 📜 Transaction History |
+|-----------------|------------------------|
+| ![AI Assistant](screenshots/concierge.png) | ![History](screenshots/history.png) |
 
 ---
 
