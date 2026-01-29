@@ -152,6 +152,11 @@ The frontend will start at `http://localhost:5173`
 "Top selling products?"
 ```
 
+### 🎙️ Voice Interaction
+1. Click the **Microphone Icon** 🎤 in the input bar.
+2. Speak your command naturally (e.g., *"Aaj kitna sales hua?"*).
+3. The AI will listen, transact the text, and process your request automatically!
+
 ---
 
 ## 📁 Project Structure
