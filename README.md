@@ -47,9 +47,9 @@ MSME BIZ comes with a beautiful **Dark Mode** for night-time usage.
 |--------------------------|------------------------|
 | ![Analytics](screenshots/analytics.png) | ![History](screenshots/history.png) |
 
-| 🤖 AI Concierge | 📜 Transaction History |
-|-----------------|------------------------|
-| ![AI Assistant](screenshots/concierge.png) | ![History](screenshots/history.png) |
+| 🤖 AI Concierge | 📜 History (Sidebar Collapsed) |
+|-----------------|--------------------------------|
+| ![AI Assistant](screenshots/concierge.png) | ![Sidebar Mode](screenshots/history_sidebar.png) |
 
 | 📄 Report (PDF Export) | |
 |------------------------|---|
