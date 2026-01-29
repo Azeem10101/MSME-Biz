@@ -5,21 +5,67 @@ import { TrendingUp } from 'lucide-react';
 const AnalyticsWidget = () => {
     const [data, setData] = useState([]);
     const [topProducts, setTopProducts] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
     useEffect(() => {
         // Fetch Weekly Stats
-        fetch('http://localhost:8000/stats/weekly')
-            .then(res => res.json())
-            .then(d => setData(d.data))
-            .catch(err => console.error("Failed to load stats", err));
-
-        // Fetch Top Products
-        fetch('http://localhost:8000/stats/top_products')
-            .then(res => res.json())
-            .then(d => setTopProducts(d.data))
-            .catch(err => console.error("Failed to load top products", err));
+        Promise.all([
+            fetch('http://localhost:8000/stats/weekly')
+                .then(res => res.json())
+                .then(d => setData(d.data)),
+            fetch('http://localhost:8000/stats/top_products')
+                .then(res => res.json())
+                .then(d => setTopProducts(d.data))
+        ])
+            .catch(err => console.error("Failed to load stats", err))
+            .finally(() => setIsLoading(false));
     }, []);
+
+    // Loading skeleton
+    if (isLoading) {
+        return (
+            <div style={{
+                background: 'var(--white)',
+                border: 'var(--border-thick)',
+                borderRadius: '12px',
+                padding: '20px',
+                marginTop: '20px',
+                boxShadow: 'var(--shadow-brutal)',
+                color: 'var(--black)'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                    <div style={{
+                        background: '#facc15',
+                        padding: '8px',
+                        borderRadius: '8px',
+                        border: 'var(--border-thin)'
+                    }}>
+                        <TrendingUp size={20} color="var(--black)" />
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>Loading Analytics...</h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                    {[1, 2].map(i => (
+                        <div key={i} style={{
+                            height: '200px',
+                            background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+                            backgroundSize: '200% 100%',
+                            animation: 'shimmer 1.5s infinite',
+                            borderRadius: '8px',
+                            border: 'var(--border-thin)'
+                        }} />
+                    ))}
+                </div>
+                <style>{`
+                    @keyframes shimmer {
+                        0% { background-position: 200% 0; }
+                        100% { background-position: -200% 0; }
+                    }
+                `}</style>
+            </div>
+        );
+    }
 
     if (data.length === 0) return null;
 
@@ -31,7 +77,9 @@ const AnalyticsWidget = () => {
             padding: '20px',
             marginTop: '20px',
             boxShadow: 'var(--shadow-brutal)',
-            color: 'var(--black)'
+            color: 'var(--black)',
+            minWidth: '500px',
+            width: '100%'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                 <div style={{

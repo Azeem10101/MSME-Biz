@@ -131,21 +131,24 @@ def update_inventory(item_name: str, quantity_change: float):
     Updates stock for an item. 
     If item doesn't exist, it creates it.
     quantity_change can be positive (restock) or negative (sale).
+    Item names are normalized to Title Case to prevent duplicates.
     """
     conn = get_db()
     cursor = conn.cursor()
     
-    # Check if exists
-    cursor.execute('SELECT stock FROM inventory WHERE item_name = ?', (item_name,))
+    # Normalize to Title Case for consistency
+    normalized_name = item_name.strip().title()
+    
+    # Check if exists (case-insensitive search)
+    cursor.execute('SELECT stock, item_name FROM inventory WHERE LOWER(item_name) = LOWER(?)', (normalized_name,))
     row = cursor.fetchone()
     
     if row:
         new_stock = row[0] + quantity_change
-        cursor.execute('UPDATE inventory SET stock = ?, updated_at = CURRENT_TIMESTAMP WHERE item_name = ?', (new_stock, item_name))
+        cursor.execute('UPDATE inventory SET stock = ?, updated_at = CURRENT_TIMESTAMP WHERE LOWER(item_name) = LOWER(?)', (new_stock, normalized_name))
     else:
-        # Create new item
-        # If reducing stock for a new item, start from 0 + quantity_change (allowing negative stock for now, or assume prior stock was 0)
-        cursor.execute('INSERT INTO inventory (item_name, stock) VALUES (?, ?)', (item_name, quantity_change))
+        # Create new item with normalized name
+        cursor.execute('INSERT INTO inventory (item_name, stock) VALUES (?, ?)', (normalized_name, quantity_change))
         
     conn.commit()
     conn.close()

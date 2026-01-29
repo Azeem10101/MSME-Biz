@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Bot, User, LayoutDashboard, History, Settings,
-  HelpCircle, Sparkles, ShoppingBag, Wallet, Package, ArrowLeft,
-  Search, Mic, ArrowUp, Activity, Menu, X, Download, TrendingUp, Sun, Moon
+  Bot, User, History, Sparkles, ShoppingBag, Wallet, Package, ArrowLeft,
+  Search, Mic, ArrowUp, Menu, X, Download, TrendingUp, Sun, Moon,
+  RotateCcw, Wifi, WifiOff, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AnalyticsWidget from './AnalyticsWidget';
@@ -125,11 +125,19 @@ const ThemeToggle = ({ isDark, onToggle }) => (
 );
 
 const TransactionHistory = ({ transactions }) => {
+  // Use useMemo to calculate dates only once per render
+  // eslint-disable-next-line react-hooks/purity
+  const { todayStr, yesterdayStr } = React.useMemo(() => {
+    const now = Date.now();
+    return {
+      todayStr: new Date(now).toISOString().split('T')[0],
+      yesterdayStr: new Date(now - 86400000).toISOString().split('T')[0]
+    };
+  }, []);
+
   const formatDate = (dateStr) => {
-    const today = new Date().toISOString().split('T')[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-    if (dateStr === today) return 'Today';
-    if (dateStr === yesterday) return 'Yesterday';
+    if (dateStr === todayStr) return 'Today';
+    if (dateStr === yesterdayStr) return 'Yesterday';
     return dateStr.split('-').reverse().join('-');
   };
 
@@ -195,8 +203,8 @@ const InventoryList = ({ items }) => (
 );
 
 const ResultDisplay = ({ data }) => {
-  // If no data or UNKNOWN, don't show a card at all (the bot text will handle the error)
-  if (!data || data.intent === 'UNKNOWN') {
+  // If no data or UNKNOWN/GENERAL_QUERY, don't show a card
+  if (!data || data.intent === 'UNKNOWN' || data.intent === 'GENERAL_QUERY') {
     return null;
   }
 
@@ -350,24 +358,34 @@ const ResultDisplay = ({ data }) => {
 };
 
 
+// Generate unique ID for messages
+const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
 function App() {
   const [messages, setMessages] = useState([
-    { role: 'bot', text: 'Namaste! I am your AI Business Assistant. Let\'s get started!' }
+    { id: generateId(), role: 'bot', text: 'Namaste! I am your AI Business Assistant. Let\'s get started!' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   // Default open on desktop
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [lowStockCount, setLowStockCount] = useState(0);
+  const [isConnected, setIsConnected] = useState(true);
 
+  // Health check on mount and periodically
   useEffect(() => {
-    // Check for low stock
-    fetch('http://localhost:8000/stats/low_stock')
-      .then(res => res.json())
-      .then(data => setLowStockCount(data.count))
-      .catch(err => console.error("Low stock check failed", err));
-  }, []); // Run on mount
+    const checkHealth = () => {
+      fetch('http://localhost:8000/health', { method: 'GET' })
+        .then(res => {
+          setIsConnected(res.ok);
+        })
+        .catch(() => setIsConnected(false));
+    };
+
+    checkHealth();
+    const interval = setInterval(checkHealth, 30000); // Check every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -397,7 +415,7 @@ function App() {
 
   const handleReset = () => {
     setMessages([
-      { role: 'bot', text: 'Namaste! I am your AI Business Assistant. Let\'s get started!' }
+      { id: generateId(), role: 'bot', text: 'Namaste! I am your AI Business Assistant. Let\'s get started!' }
     ]);
   };
 
@@ -436,7 +454,7 @@ function App() {
       // No item logic needed.
     }
 
-    setMessages(prev => [...prev, { role: 'user', text: message }]);
+    setMessages(prev => [...prev, { id: generateId(), role: 'user', text: message }]);
     setLoading(true);
 
     try {
@@ -456,9 +474,11 @@ function App() {
       const data = await response.json();
       // If answer exists, use it. If not, maybe it's an error message? Fallback to generic.
       const botText = data.answer || data.message || 'Quick Sale Recorded!';
-      setMessages(prev => [...prev, { role: 'bot', text: botText, result: data }]);
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Error recording quick sale.', isError: true }]);
+      setMessages(prev => [...prev, { id: generateId(), role: 'bot', text: botText, result: data }]);
+      setIsConnected(true);
+    } catch {
+      setIsConnected(false);
+      setMessages(prev => [...prev, { id: generateId(), role: 'bot', text: '⚠️ Connection Error: Please ensure the backend server is running on port 8000.', isError: true }]);
     } finally {
       setLoading(false);
     }
@@ -470,7 +490,7 @@ function App() {
 
     const userMessage = input;
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    setMessages(prev => [...prev, { id: generateId(), role: 'user', text: userMessage }]);
     setLoading(true);
 
     try {
@@ -489,9 +509,11 @@ function App() {
 
       const data = await response.json();
       const botText = data.answer || data.message || 'Data Extracted Successfully!';
-      setMessages(prev => [...prev, { role: 'bot', text: botText, result: data }]);
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'bot', text: 'Oops! Something went wrong with the system connection.', isError: true }]);
+      setMessages(prev => [...prev, { id: generateId(), role: 'bot', text: botText, result: data }]);
+      setIsConnected(true);
+    } catch {
+      setIsConnected(false);
+      setMessages(prev => [...prev, { id: generateId(), role: 'bot', text: '⚠️ Connection Error: Please ensure the backend server is running on port 8000. Run: python app.py', isError: true }]);
     } finally {
       setLoading(false);
     }
@@ -605,6 +627,30 @@ function App() {
           <Sparkles size={22} color="#000" />
           <span>AI Concierge</span>
         </button>
+
+        {/* Powered by Gemini Badge */}
+        <div style={{
+          marginTop: '16px',
+          display: 'flex',
+          justifyContent: 'center'
+        }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '6px 12px',
+            background: 'linear-gradient(135deg, #4285f4 0%, #9b72cb 50%, #d96570 100%)',
+            color: '#fff',
+            borderRadius: '20px',
+            fontSize: '0.65rem',
+            fontWeight: '700',
+            border: 'var(--border-thin)',
+            boxShadow: '2px 2px 0px var(--shadow-color)'
+          }}>
+            <Zap size={12} />
+            Powered by Gemini
+          </span>
+        </div>
       </aside>
 
       {/* Main Content */}
@@ -631,19 +677,55 @@ function App() {
               <p>Multilingual Smart Extraction v3.0</p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
-            <div className="avatar bot">
-              <HelpCircle size={24} color="var(--black)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Connection Status */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              background: isConnected ? '#dcfce7' : '#fee2e2',
+              border: 'var(--border-thin)',
+              borderRadius: '20px',
+              fontSize: '0.75rem',
+              fontWeight: '800'
+            }}>
+              {isConnected ? <Wifi size={14} /> : <WifiOff size={14} />}
+              {isConnected ? 'LIVE' : 'OFFLINE'}
             </div>
+
+            {/* New Chat Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleReset}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                background: 'var(--white)',
+                border: 'var(--border-thin)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '700',
+                fontSize: '0.8rem',
+                boxShadow: '2px 2px 0px var(--shadow-color)'
+              }}
+            >
+              <RotateCcw size={16} />
+              New
+            </motion.button>
+
+            <ThemeToggle isDark={isDarkMode} onToggle={() => setIsDarkMode(!isDarkMode)} />
           </div>
         </header>
 
         <div className="chat-messages">
           <AnimatePresence mode="popLayout">
-            {messages.map((msg, idx) => (
+            {messages.map((msg) => (
               <motion.div
-                key={idx}
+                key={msg.id}
                 initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 className={`message-wrapper ${msg.role}`}
@@ -687,7 +769,7 @@ function App() {
             <Search size={24} color="var(--black)" />
             <input
               type="text"
-              placeholder="Sold 5 items for 1000..."
+              placeholder="Type naturally: 'Sold 5 notebooks to Rahul' or 'How's business today?'"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={loading}
@@ -701,10 +783,11 @@ function App() {
                 type="button"
                 className={`icon-btn ${isListening ? 'mic-btn-active' : 'mic-btn-inactive'}`}
                 onClick={handleMicClick}
+                title="Voice Input (Speak in any language)"
               >
                 <Mic size={24} />
               </button>
-              <button type="submit" className="send-btn" disabled={loading || !input.trim()}>
+              <button type="submit" className="send-btn" disabled={loading || !input.trim()} title="Send Message">
                 <ArrowUp size={24} strokeWidth={3} />
               </button>
             </div>

@@ -1,7 +1,17 @@
 import os
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(message)s',
+    datefmt='%H:%M:%S'
+)
+logger = logging.getLogger(__name__)
+
 from datetime import datetime
 from typing import Optional
 from fastapi import FastAPI, HTTPException
@@ -33,14 +43,60 @@ class MessageRequest(BaseModel):
 
 @app.post("/process")
 async def process_message(request: MessageRequest):
-    print(f"DEBUG V4: Received message '{request.message}'")
+    logger.info(f"Processing: '{request.message[:50]}...'" if len(request.message) > 50 else f"Processing: '{request.message}'")
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     
     msg_lower = request.message.lower()
-    # 1. Inventory Override (Strict Priority)
+    
+    # 0. Help Override - No API needed
+    if 'what can you do' in msg_lower or 'help' in msg_lower or 'how do i' in msg_lower:
+        logger.info("Intent: HELP (override)")
+        return {
+            "intent": "GENERAL_QUERY",
+            "answer": """🤖 I'M YOUR AI BUSINESS ASSISTANT!
+
+Here's how I can help you manage your business:
+
+📦 INVENTORY MANAGEMENT
+   • Show me inventory
+   • Bought 50 milk (Restock)
+   • Rice stock level?
+
+💰 SALES RECORDING
+   • Sold 5 notebooks to Rahul for ₹250
+   • Sold 2 milk packets
+
+💸 EXPENSE TRACKING
+   • Paid ₹500 for electricity
+   • Auto rickshaw fair ₹50
+
+📊 ANALYTICS & INSIGHTS
+   • How's business today?
+   • Show me sales trends
+   • Show me recent history
+
+🗣️ VOICE INPUT
+Click the mic button and speak in Hindi, English, or Hinglish!
+
+Just type naturally - I understand you! 🎯"""
+        }
+    
+    # 1. Analytics/Trends Override - Use DB directly
+    if 'trend' in msg_lower or 'analytics' in msg_lower or 'chart' in msg_lower or 'graph' in msg_lower:
+        logger.info("Intent: ANALYTICS (override)")
+        db_stats = database.get_daily_stats(datetime.now().strftime('%Y-%m-%d'))
+        return {
+            "intent": "SUMMARY_QUERY",
+            "answer": "Here are your sales trends and analytics:",
+            "view_type": "chart",
+            "stats": db_stats,
+            "start_date": datetime.now().strftime('%Y-%m-%d')
+        }
+    
+    # 2. Inventory Override (Strict Priority)
     if 'inventory' in msg_lower or 'stock' in msg_lower:
-        print("LOG: Inventory Override Activated")
+        logger.info("Intent: INVENTORY_QUERY (override)")
         items = database.get_all_inventory()
         return {
             "intent": "INVENTORY_QUERY",
@@ -49,9 +105,9 @@ async def process_message(request: MessageRequest):
             "view_type": "inventory_list"
         }
 
-    # 2. History Override
+    # 3. History Override
     if 'history' in msg_lower or 'recent' in msg_lower or 'transactions' in msg_lower:
-        print("LOG: History Override Activated")
+        logger.info("Intent: HISTORY_QUERY (override)")
         txs = database.get_recent_transactions(20)
         return {
             "intent": "SUMMARY_QUERY",
@@ -60,34 +116,69 @@ async def process_message(request: MessageRequest):
             "view_type": "list",
             "stats": database.get_daily_stats(datetime.now().strftime('%Y-%m-%d'))
         }
+    
+    # 4. Summary/Business Override
+    if 'how' in msg_lower and ('business' in msg_lower or 'doing' in msg_lower or 'today' in msg_lower):
+        logger.info("Intent: SUMMARY (override)")
+        db_stats = database.get_daily_stats(datetime.now().strftime('%Y-%m-%d'))
+        s = db_stats['total_sales']
+        e = db_stats['total_expenses']
+        p = db_stats['net_profit']
+        c = db_stats['transaction_count']
+        return {
+            "intent": "SUMMARY_QUERY",
+            "answer": f"📊 **Today's Business Summary**\n\n💰 Total Sales: ₹{int(s)}\n💸 Expenses: ₹{int(e)}\n📈 Net Profit: ₹{int(p)}\n📝 Transactions: {c}",
+            "stats": db_stats,
+            "view_type": "chart",
+            "start_date": datetime.now().strftime('%Y-%m-%d')
+        }
+    
+    # 5. Stock Purchase Override - Simple pattern matching
+    import re
+    purchase_match = re.search(r'(?:bought|added|restock(?:ed)?|refill(?:ed)?)\s+(\d+)\s+(.+)', msg_lower)
+    if purchase_match:
+        qty = int(purchase_match.group(1))
+        item_name = purchase_match.group(2).strip().title()
+        # Remove trailing words like "units", "items", etc.
+        item_name = re.sub(r'\s*(units?|items?|pieces?)\s*$', '', item_name, flags=re.IGNORECASE).strip()
+        
+        logger.info(f"Intent: STOCK_PURCHASE (override) - {qty} x {item_name}")
+        database.update_inventory(item_name, qty)
+        new_stock = database.get_inventory_stock(item_name)
+        return {
+            "intent": "STOCK_PURCHASE",
+            "answer": f"✅ Added {qty} {item_name} to inventory. New Stock: {int(new_stock)} units.",
+            "item_name": item_name,
+            "quantity": qty
+        }
 
-    # 3. AI Processing
+    # 6. AI Processing (Fallback - only for complex requests)
     current_date = request.current_date or datetime.now().strftime("%Y-%m-%d")
     result = assistant.process_message(request.message, current_date, request.history)
     intent = result.get('intent')
-    print(f"DEBUG: AI Intent {intent}")
+    logger.info(f"Intent: {intent}")
     
     # 3. Persist Data (if applicable)
     if intent == 'SALE_ENTRY':
         database.add_sale(result)
-        print(f"DB: Saved Sale {result['total']}")
+        logger.info(f"💰 Sale recorded: ₹{result['total']}")
         
         # AUTOMATIC STOCK DEDUCTION
         for item in result.get('items', []):
             p_name = item['product_name']
             qty = item['quantity']
             database.update_inventory(p_name, -qty)
-            print(f"DB: Deducted {qty} from {p_name}")
+            logger.debug(f"Stock updated: {p_name} -{qty}")
         
     elif intent == 'EXPENSE_ENTRY':
         database.add_expense(result)
-        print(f"DB: Saved Expense {result['amount']}")
+        logger.info(f"📝 Expense recorded: ₹{result['amount']}")
 
     elif intent == 'INVENTORY_UPDATE':
         item_name = result['item']
         qty_change = result['quantity_change']
         database.update_inventory(item_name, qty_change)
-        print(f"DB: Updated Inventory {item_name} by {qty_change}")
+        logger.info(f"📦 Inventory updated: {item_name} {'+' if qty_change > 0 else ''}{qty_change}")
         
         new_stock = database.get_inventory_stock(item_name)
         result['answer'] = f"Updated {item_name}. New stock level: {int(new_stock)}"
@@ -97,26 +188,33 @@ async def process_message(request: MessageRequest):
         item_name = result['item_name']
         qty = result['quantity']
         database.update_inventory(item_name, qty)
+        logger.info(f"📦 Stock added: {item_name} +{qty}")
         
-        # 2. Add Expense
-        expense_entry = {
-            "date": result['date'],
-            "category": "Inventory Restock",
-            "amount": result['total_cost'],
-            "description": f"Restock: {qty} units of {item_name}"
-        }
-        database.add_expense(expense_entry)
+        # 2. Add Expense ONLY if cost was specified
+        total_cost = result.get('total_cost', 0) or 0
+        if total_cost > 0:
+            expense_entry = {
+                "date": result['date'],
+                "category": "Inventory Restock",
+                "amount": total_cost,
+                "description": f"Restock: {int(qty)} units of {item_name}"
+            }
+            database.add_expense(expense_entry)
+            logger.info(f"💸 Expense recorded: ₹{total_cost}")
         
         # 3. Formulate Answer
         new_stock = database.get_inventory_stock(item_name)
-        result['answer'] = f"✅ Restocked {item_name} (+{int(qty)}). New Stock: {int(new_stock)}.\n💸 Expense recorded: ₹{result['total_cost']}"
+        if total_cost > 0:
+            result['answer'] = f"✅ Restocked {item_name} (+{int(qty)}). New Stock: {int(new_stock)}.\n💸 Expense recorded: ₹{int(total_cost)}"
+        else:
+            result['answer'] = f"✅ Added {int(qty)} {item_name} to inventory. New Stock: {int(new_stock)} units."
 
     # 4. Retrieve Persistent Stats (for queries)
     if intent in ['SUMMARY_QUERY', 'INSIGHT_QUERY']:
         db_stats = database.get_daily_stats(current_date)
         # OVERWRITE AI's guessed stats with real DB stats
         result['stats'] = db_stats
-        print(f"DB: Injected Stats {db_stats}")
+        logger.debug(f"Stats injected: {db_stats}")
         
         if intent == 'SUMMARY_QUERY':
             # ANALYTICS MODE: Show Totals

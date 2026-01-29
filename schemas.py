@@ -45,7 +45,7 @@ class StockPurchase(BaseModel):
     date: str
     item_name: str
     quantity: float
-    total_cost: float
+    total_cost: Optional[float] = 0  # Optional - if user doesn't specify price
 
 class InventoryQuery(BaseModel):
     intent: Intent = Intent.INVENTORY_QUERY

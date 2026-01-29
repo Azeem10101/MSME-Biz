@@ -8,7 +8,6 @@ from pydantic import ValidationError
 from typing import Dict, Any
 from schemas import (
     SaleEntry, ExpenseEntry, InventoryUpdate, 
-    SaleEntry, ExpenseEntry, InventoryUpdate, 
     SummaryQuery, InsightQuery, GeneralQuery, InventoryQuery, StockPurchase, UnknownIntent,
     AssistantResponse
 )
@@ -25,7 +24,7 @@ Schemas:
 SALE_ENTRY: {{intent: "SALE_ENTRY", date: "YYYY-MM-DD", items: [{{product_name: str, quantity: num, unit_price: num}}], total: num, customer_name: optional str}}
 EXPENSE_ENTRY: {{intent: "EXPENSE_ENTRY", date: "YYYY-MM-DD", category: str, amount: num, description: optional str}}
 INVENTORY_UPDATE: {{intent: "INVENTORY_UPDATE", date: "YYYY-MM-DD", item: str, quantity_change: num}}
-STOCK_PURCHASE: {{intent: "STOCK_PURCHASE", date: "YYYY-MM-DD", item_name: str, quantity: num, total_cost: num}}
+STOCK_PURCHASE: {{intent: "STOCK_PURCHASE", date: "YYYY-MM-DD", item_name: str, quantity: num, total_cost: num (optional, 0 if unknown)}}
 INVENTORY_QUERY: {{intent: "INVENTORY_QUERY", item_name: optional str}}
 SUMMARY_QUERY: {{intent: "SUMMARY_QUERY", metric: str, start_date: "YYYY-MM-DD", end_date: "YYYY-MM-DD", answer: str, stats: dict}}
 INSIGHT_QUERY: {{intent: "INSIGHT_QUERY", insight_type: str, start_date: optional "YYYY-MM-DD", end_date: optional "YYYY-MM-DD", answer: str, stats: dict}}
@@ -40,7 +39,7 @@ Instructions:
    - Even informal phrases like "show me the numbers" MUST use SUMMARY_QUERY.
    - If user asks about STOCK LEVELS ("How much milk?", "Do I have notebooks?", "Inventory value"), use INVENTORY_QUERY.
    - If user mentions "Sold" or "Used" but NO price/money, use INVENTORY_UPDATE (negative quantity).
-   - If user mentions "Bought", "Restocked", "Refilled" specific items ("Bought 50 milk packets for 2000"), use STOCK_PURCHASE.
+   - If user mentions "Bought", "Restocked", "Refilled", "Added" items like ("Bought 50 milk", "Refilled 100 notebooks"), use STOCK_PURCHASE. Set total_cost=0 if no price mentioned.
 2. For SUMMARY_QUERY and INSIGHT_QUERY:
    - Calculate the exact answer from Conversation History structured results (System Match).
    - For SALE_ENTRY: Sum the "total" field.
