@@ -8,6 +8,10 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 
+<br/>
+
+![MSME BIZ Dashboard](screenshots/analytics.png)
+
 ---
 
 ## 🌟 What is MSME BIZ?
@@ -18,6 +22,14 @@ MSME BIZ is an AI-powered business assistant designed specifically for Indian Mi
 - 🇬🇧 **English**
 - 🗣️ **Hinglish** (Mix of both!)
 - 🎤 **Voice Input** supported
+
+---
+
+## 📸 Screenshots
+
+| Inventory Management | AI Concierge |
+|----------------------|--------------|
+| ![Inventory](screenshots/inventory.png) | ![AI Assistant](screenshots/assistant.png) |
 
 ---
 
