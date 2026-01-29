@@ -206,7 +206,7 @@ MSME BIZ uses a **Neo-Brutalist** design style:
 
 ---
 
-## 🤝 Team Gravity
+## 🤝 Team Zency
 
 Built with ❤️ for the GDG Hackathon 2026
 
