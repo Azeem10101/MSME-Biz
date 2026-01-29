@@ -707,16 +707,16 @@ function App() {
                 alignItems: 'center',
                 gap: '6px',
                 padding: '8px 16px',
-                background: 'var(--black)',
-                color: 'var(--white)',
-                border: 'var(--border-thin)',
+                background: 'var(--white)',
+                color: 'var(--black)',
+                border: '2px solid #000',
                 borderRadius: '20px',
                 cursor: 'pointer',
                 fontWeight: '900',
                 fontSize: '0.8rem',
                 fontFamily: 'Syne',
                 textTransform: 'uppercase',
-                boxShadow: '2px 2px 0px var(--shadow-color)',
+                boxShadow: '2px 2px 0px #000',
                 transition: 'box-shadow 0.2s, transform 0.2s'
               }}
             >
