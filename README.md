@@ -25,15 +25,31 @@ MSME BIZ is an AI-powered business assistant designed specifically for Indian Mi
 
 ---
 
-## 📸 Screenshots
+## 🌓 Theme Support
 
-| 📊 Analytics | 📦 Inventory |
-|-------------|--------------|
-| ![Analytics](screenshots/analytics.png) | ![Inventory](screenshots/inventory.png) |
+MSME BIZ comes with a beautiful **Dark Mode** for night-time usage.
 
-| 🤖 AI Concierge | 📜 Transaction History |
-|-----------------|------------------------|
-| ![AI Assistant](screenshots/concierge.png) | ![History](screenshots/history.png) |
+### 📊 Dashboard
+| Light Mode | Dark Mode |
+|------------|-----------|
+| ![Light Dashboard](screenshots/dashboard.png) | ![Dark Dashboard](screenshots/dashboard_dark.png) |
+
+### 📦 Inventory
+| Light Mode | Dark Mode |
+|------------|-----------|
+| ![Light Inventory](screenshots/inventory.png) | ![Dark Inventory](screenshots/inventory_dark.png) |
+
+---
+
+## 📸 More Screenshots
+
+| 📊 Analytics (Deep Dive) | 📜 Transaction History |
+|--------------------------|------------------------|
+| ![Analytics](screenshots/analytics.png) | ![History](screenshots/history.png) |
+
+| 🤖 AI Concierge | |
+|-----------------|---|
+| ![AI Assistant](screenshots/concierge.png) | |
 
 ---
 
