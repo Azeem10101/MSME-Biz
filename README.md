@@ -211,9 +211,9 @@ MSME BIZ uses a **Neo-Brutalist** design style:
 
 ---
 
-## 🤝 Team Zency
+## 👤 Author & Team
 
-Built with ❤️ for the GDG Hackathon 2026
+This project was developed entirely by me and only me. I am the **sole author** of this entire codebase and project, representing **Team Zency**. Built with ❤️ for the GDG Hackathon 2026.
 
 ---
 
